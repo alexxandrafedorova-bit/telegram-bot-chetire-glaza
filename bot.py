@@ -1,88 +1,84 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import threading
-
-class PingHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"OK")
-
-def run_http_server():
-    server = HTTPServer(("0.0.0.0", 10000), PingHandler)
-    server.serve_forever()
-
-threading.Thread(target=run_http_server, daemon=True).start()
 import telebot
 from telebot import types
 
 TOKEN = "8406532654:AAGnWgd8Ox8RpiDBZzk_TBXE-xgQi6nxUgs"
-SITE_URL = "https://4glaza-72.ru"
 
 bot = telebot.TeleBot(TOKEN)
 
 
-@bot.message_handler(commands=['start'])
+# ---------- МЕНЮ ----------
+def main_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    # КНОПКА С МИНИ-ПРИЛОЖЕНИЕМ
+    web_app = types.WebAppInfo(url="https://4glaza-72.ru")
+    btn_order = types.KeyboardButton("🛒 Оформить заказ", web_app=web_app)
+
+    btn_manager = types.KeyboardButton("💬 Написать менеджеру")
+    btn_call = types.KeyboardButton("📞 Позвонить")
+    btn_address = types.KeyboardButton("📍 Адрес")
+    btn_time = types.KeyboardButton("⏰ Время работы")
+
+    markup.add(btn_order)
+    markup.add(btn_manager, btn_call)
+    markup.add(btn_address, btn_time)
+
+    return markup
+
+
+# ---------- /start ----------
+@bot.message_handler(commands=["start"])
 def start(message):
-    markup = types.InlineKeyboardMarkup(row_width=1)
-
-    webapp_button = types.InlineKeyboardButton(
-        text="🛒 Оформить заказ",
-        web_app=types.WebAppInfo(url=SITE_URL)
-    )
-
-    manager_button = types.InlineKeyboardButton(
-        text="💬 Написать менеджеру",
-        url="https://t.me/Four_eyes72"
-    )
-
-    call_button = types.InlineKeyboardButton(
-        text="📞 Позвонить",
-        url="tel:+79220013072"
-    )
-
-    address_button = types.InlineKeyboardButton(
-        text="📍 Адрес",
-        callback_data="address"
-    )
-
-    time_button = types.InlineKeyboardButton(
-        text="⏰ Время работы",
-        callback_data="time"
-    )
-
-    markup.add(
-        webapp_button,
-        manager_button,
-        call_button,
-        address_button,
-        time_button
-    )
-
     bot.send_message(
         message.chat.id,
-        "👋 Здравствуйте!\n\n"
-        "Добро пожаловать в «Четыре глаза» 👓\n"
-        "Вы можете оформить заказ прямо в Telegram или связаться с нами удобным способом:",
-        reply_markup=markup
+        "👋 Добро пожаловать в магазин «Четыре глаза» (Тюмень)\n\n"
+        "🔭 Телескопы\n"
+        "🔬 Микроскопы\n"
+        "🔭 Бинокли\n\n"
+        "Нажмите «Оформить заказ», чтобы открыть каталог.",
+        reply_markup=main_menu()
     )
 
-@bot.callback_query_handler(func=lambda call: call.data == "address")
-def send_address(call):
-    bot.answer_callback_query(call.id)
+
+# ---------- КНОПКИ ----------
+@bot.message_handler(func=lambda message: message.text == "💬 Написать менеджеру")
+def manager(message):
     bot.send_message(
-        call.message.chat.id,
+        message.chat.id,
+        "💬 Менеджер магазина:\n"
+        "👉 @Four_eyes72\n\n"
+        "Сообщение можно начать так:\n"
+        "«Здравствуйте! Хочу оформить заказ»"
+    )
+
+
+@bot.message_handler(func=lambda message: message.text == "📞 Позвонить")
+def call(message):
+    bot.send_message(
+        message.chat.id,
+        "📞 Телефон магазина:\n"
+        "+7 (922) 001-30-72"
+    )
+
+
+@bot.message_handler(func=lambda message: message.text == "📍 Адрес")
+def address(message):
+    bot.send_message(
+        message.chat.id,
         "📍 Наш адрес:\n"
         "г. Тюмень, ул. 50 лет Октября, 29"
     )
 
 
-@bot.callback_query_handler(func=lambda call: call.data == "time")
-def send_time(call):
-    bot.answer_callback_query(call.id)
+@bot.message_handler(func=lambda message: message.text == "⏰ Время работы")
+def time(message):
     bot.send_message(
-        call.message.chat.id,
+        message.chat.id,
         "⏰ Время работы:\n"
-        "Ежедневно с 10:00 до 20:00"
+        "С 10:00 до 20:00\n"
+        "Ежедневно"
     )
 
-bot.polling()
+
+# ---------- ЗАПУСК ----------
+bot.polling(none_stop=True)
