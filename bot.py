@@ -23,7 +23,7 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.InlineKeyboardMarkup()
+    markup = types.InlineKeyboardMarkup(row_width=1)
 
     webapp_button = types.InlineKeyboardButton(
         text="🛒 Оформить заказ",
@@ -32,19 +32,57 @@ def start(message):
 
     manager_button = types.InlineKeyboardButton(
         text="💬 Написать менеджеру",
-        url="https://t.me/Four_eyes72?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%AF%20%D0%BF%D0%B8%D1%88%D1%83%20%D0%B8%D0%B7%20Telegram-%D0%B1%D0%BE%D1%82%D0%B0%20%C2%AB%D0%A7%D0%B5%D1%82%D1%8B%D1%80%D0%B5%20%D0%B3%D0%BB%D0%B0%D0%B7%D0%B0%C2%BB."
+        url="https://t.me/Four_eyes72"
     )
 
-    markup.add(webapp_button)
-    markup.add(manager_button)
+    call_button = types.InlineKeyboardButton(
+        text="📞 Позвонить",
+        url="tel:+79220013072"
+    )
+
+    address_button = types.InlineKeyboardButton(
+        text="📍 Адрес",
+        callback_data="address"
+    )
+
+    time_button = types.InlineKeyboardButton(
+        text="⏰ Время работы",
+        callback_data="time"
+    )
+
+    markup.add(
+        webapp_button,
+        manager_button,
+        call_button,
+        address_button,
+        time_button
+    )
 
     bot.send_message(
         message.chat.id,
-        "Здравствуйте! 👋\n\n"
-        "Добро пожаловать в «Четыре глаза» 🔭\n"
-        "Вы можете оформить заказ прямо в Telegram:",
+        "👋 Здравствуйте!\n\n"
+        "Добро пожаловать в «Четыре глаза» 👓\n"
+        "Вы можете оформить заказ прямо в Telegram или связаться с нами удобным способом:",
         reply_markup=markup
     )
 
+@bot.callback_query_handler(func=lambda call: call.data == "address")
+def send_address(call):
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "📍 Наш адрес:\n"
+        "г. Тюмень, ул. 50 лет Октября, 29"
+    )
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "time")
+def send_time(call):
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "⏰ Время работы:\n"
+        "Ежедневно с 10:00 до 20:00"
+    )
 
 bot.polling()
