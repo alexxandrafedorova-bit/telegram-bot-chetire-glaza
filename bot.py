@@ -1,89 +1,88 @@
 import os
-import telebot
-from telebot import types
 from flask import Flask, request
-
-# ================== НАСТРОЙКИ ==================
+import telebot
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 
 TOKEN = os.environ.get("BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # https://telegram-bot-chetire-glaza.onrender.com
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# ================== МЕНЮ ==================
+# --- КНОПКИ ---
+def main_keyboard():
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
 
-def main_menu():
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    web_app = types.WebAppInfo(url="https://4glaza-72.ru")
-    btn_order = types.KeyboardButton("🛒 Оформить заказ", web_app=web_app)
-
-    btn_manager = types.KeyboardButton(
-        "💬 Написать менеджеру",
-        url="https://t.me/Four_eyes72"
+    kb.add(
+        KeyboardButton("🛒 Оформить заказ", web_app=WebAppInfo(url="https://4glaza-72.ru"))
     )
 
-    btn_call = types.KeyboardButton("📞 Позвонить")
-    btn_address = types.KeyboardButton("📍 Адрес")
-    btn_time = types.KeyboardButton("⏰ Время работы")
+    kb.add(
+        KeyboardButton("📞 Позвонить"),
+        KeyboardButton("💬 Связаться с менеджером")
+    )
 
-    markup.add(btn_order)
-    markup.add(btn_manager)
-    markup.add(btn_call, btn_address)
-    markup.add(btn_time)
+    kb.add(
+        KeyboardButton("📍 Адрес"),
+        KeyboardButton("⏰ Время работы")
+    )
 
-    return markup
+    return kb
 
-# ================== /start ==================
 
+# --- СТАРТ ---
 @bot.message_handler(commands=["start"])
 def start(message):
     bot.send_message(
         message.chat.id,
-        "👋 Добро пожаловать в магазин «Четыре глаза» (Тюмень)\n\n"
-        "🔭 Телескопы\n"
-        "🔬 Микроскопы\n"
-        "🔭 Бинокли\n\n"
+        "Здравствуйте! 👋\n\n"
+        "Добро пожаловать в магазин «Четыре глаза» 🔭\n\n"
         "Нажмите «Оформить заказ», чтобы открыть каталог.",
-        reply_markup=main_menu()
+        reply_markup=main_keyboard()
     )
 
-# ================== КНОПКИ ==================
 
-@bot.message_handler(func=lambda message: message.text == "📞 Позвонить")
-def call(message):
-    bot.send_message(message.chat.id, "📞 Телефон магазина:\n+7 (922) 001-30-72")
+# --- КНОПКИ ---
+@bot.message_handler(func=lambda m: True)
+def buttons(message):
+    if message.text == "📞 Позвонить":
+        bot.send_message(message.chat.id, "📞 +7 922 001 3072")
 
-@bot.message_handler(func=lambda message: message.text == "📍 Адрес")
-def address(message):
-    bot.send_message(message.chat.id, "📍 Наш адрес:\nг. Тюмень, ул. 50 лет Октября, 29")
+    elif message.text == "💬 Связаться с менеджером":
+        bot.send_message(
+            message.chat.id,
+            "💬 Написать менеджеру:\nhttps://t.me/Four_eyes72"
+        )
 
-@bot.message_handler(func=lambda message: message.text == "⏰ Время работы")
-def time(message):
-    bot.send_message(message.chat.id, "⏰ Время работы:\nС 10:00 до 20:00\nЕжедневно")
+    elif message.text == "📍 Адрес":
+        bot.send_message(
+            message.chat.id,
+            "📍 г. Тюмень, ул. 50 лет Октября, 29"
+        )
 
-# ================== WEBHOOK ==================
+    elif message.text == "⏰ Время работы":
+        bot.send_message(
+            message.chat.id,
+            "⏰ С 10:00 до 20:00 ежедневно"
+        )
 
+
+# --- WEBHOOK ---
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
+    update = telebot.types.Update.de_json(
+        request.get_data().decode("utf-8")
+    )
     bot.process_new_updates([update])
-    return "OK", 200
+    return "ok", 200
 
-@app.route("/", methods=["GET"])
+
+@app.route("/")
 def index():
     return "Bot is running", 200
 
-# ================== ЗАПУСК ==================
 
 if __name__ == "__main__":
     bot.remove_webhook()
     bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
-
-
-
-
-
-
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
