@@ -5,7 +5,7 @@ from flask import Flask, request
 
 # ================== НАСТРОЙКИ ==================
 
-TOKEN = os.environ.get("BOT_TOKEN")  # токен из Render Environment
+TOKEN = os.environ.get("BOT_TOKEN")  # токен из Render
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # https://telegram-bot-chetire-glaza.onrender.com
 
 bot = telebot.TeleBot(TOKEN)
@@ -16,11 +16,9 @@ app = Flask(__name__)
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
-    # Мини-приложение (каталог)
     web_app = types.WebAppInfo(url="https://4glaza-72.ru")
     btn_order = types.KeyboardButton("🛒 Оформить заказ", web_app=web_app)
 
-    # ССЫЛКА на менеджера (ВАЖНО: это обычная ссылка)
     btn_manager = types.KeyboardButton(
         "💬 Написать менеджеру",
         url="https://t.me/Four_eyes72"
@@ -76,7 +74,7 @@ def time(message):
 
 # ================== WEBHOOK ==================
 
-@app.route("/", methods=["POST"])
+@app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     json_str = request.get_data().decode("UTF-8")
     update = telebot.types.Update.de_json(json_str)
@@ -91,6 +89,7 @@ def index():
 
 if __name__ == "__main__":
     bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
+    bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
