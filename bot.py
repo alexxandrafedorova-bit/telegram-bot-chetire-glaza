@@ -3,10 +3,8 @@ import telebot
 from telebot import types
 from flask import Flask, request
 
-# ================== НАСТРОЙКИ ==================
-
-TOKEN = os.environ.get("BOT_TOKEN")  # токен из Render
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # https://telegram-bot-chetire-glaza.onrender.com
+TOKEN = os.environ.get("BOT_TOKEN")
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
@@ -53,28 +51,19 @@ def start(message):
 
 @bot.message_handler(func=lambda message: message.text == "📞 Позвонить")
 def call(message):
-    bot.send_message(
-        message.chat.id,
-        "📞 Телефон магазина:\n+7 (922) 001-30-72"
-    )
+    bot.send_message(message.chat.id, "📞 Телефон магазина:\n+7 (922) 001-30-72")
 
 @bot.message_handler(func=lambda message: message.text == "📍 Адрес")
 def address(message):
-    bot.send_message(
-        message.chat.id,
-        "📍 Наш адрес:\nг. Тюмень, ул. 50 лет Октября, 29"
-    )
+    bot.send_message(message.chat.id, "📍 Наш адрес:\nг. Тюмень, ул. 50 лет Октября, 29")
 
 @bot.message_handler(func=lambda message: message.text == "⏰ Время работы")
 def time(message):
-    bot.send_message(
-        message.chat.id,
-        "⏰ Время работы:\nС 10:00 до 20:00\nЕжедневно"
-    )
+    bot.send_message(message.chat.id, "⏰ Время работы:\nС 10:00 до 20:00\nЕжедневно")
 
 # ================== WEBHOOK ==================
 
-@app.route(f"/{TOKEN}", methods=["POST"])
+@app.route("/webhook", methods=["POST"])
 def webhook():
     json_str = request.get_data().decode("UTF-8")
     update = telebot.types.Update.de_json(json_str)
@@ -85,11 +74,5 @@ def webhook():
 def index():
     return "Bot is running", 200
 
-# ================== ЗАПУСК ==================
-
-if __name__ == "__main__":
-    bot.remove_webhook()
-    bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
 
